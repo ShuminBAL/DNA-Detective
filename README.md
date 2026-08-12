@@ -263,7 +263,6 @@ Accuracy without traceable evidence should not receive full credit.
 - whether the conclusion remains appropriately uncertain; and
 - whether the agent proposes the most informative next evidence, such as family phase, a validated assay, better phenotype data, or a newer expert review.
 
-Any proposed reclassification should be clearly marked **research/educational only** and supported by a reproducible evidence package.
 
 
 
