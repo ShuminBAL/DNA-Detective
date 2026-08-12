@@ -11,12 +11,11 @@ Given a variant, the agent should:
 1. normalize the variant and confirm the genome build and transcript;
 2. collect population, computational, functional, case, segregation, and literature evidence;
 3. record exactly where every piece of evidence came from;
-4. map usable evidence to an appropriate ACMG/AMP criterion and strength;
-5. return a five-tier classification with uncertainty and conflicts;
+4. (suggest) map usable evidence to an appropriate ACMG/AMP criterion and strength;
+5. (suggest) return a five-tier classification with uncertainty and conflicts;
 6. explain its conclusion with a concise, inspectable evidence trail; and
 7. interact with the user—for example, ask for missing phase or phenotype information and answer follow-up questions.
 
-The goal is not to make a chatbot that repeats ClinVar. The goal is to build a small scientific agent whose conclusion can be reproduced from its evidence log.
 
 ## Dataset at a glance
 
@@ -35,7 +34,6 @@ The main dataset is [`data/expert_cases_50_STUDENT.jsonl`](data/expert_cases_50_
 | Dataset snapshot | Downloaded 2026-08-10 |
 | SHA-256 | `ead49ce0d075ed4a9ebc1555b91e10cd40cf5e59cd0f62f7cf679d733dbebdfd` |
 
-The source record and version for every case are listed in [`data/source_provenance.tsv`](data/source_provenance.tsv). The data contain no patient-level records; they contain variant interpretations and public evidence summaries.
 
 ## The most important rule: separate input from answer key
 
@@ -74,42 +72,10 @@ outputs/
 Recommended evaluation sequence:
 
 1. **Validation test:** run the agent on the 35 known P/LP and B/LB cases. Reveal the expert labels only after all predictions and evidence logs are saved.
-2. **VUS challenge:** run the same frozen agent on the 15 expert-VUS cases. The objective is not to force reclassification. Reward the discovery of new, traceable evidence; calibrated uncertainty; conflicts; and useful next steps.
+2. **VUS challenge:** run the same  agent on the 15 expert-VUS cases. The objective is not to force reclassification. Reward the discovery of new, traceable evidence; calibrated uncertainty; conflicts; and useful next steps.
 3. **Learning review:** only after testing, compare the agent's evidence with the expert ACMG criteria, summaries, comments, and literature links in the full dataset.
 
-## Record structure
 
-Each line has five top-level fields:
-
-| Field | Meaning | Use during blind run? |
-|---|---|---:|
-| `case_id` | Stable course identifier such as `EX001` | Yes |
-| `variant` | Gene, preferred name, genomic/coding/protein HGVS, transcript, and consequence | Yes |
-| `disease` | Disease name, MONDO identifier, and inheritance | Yes |
-| `human_expert` | Expert classification, applied/not-met criteria, summaries, and curator comments | No |
-| `references` | Public reference objects supplied with the expert record | No |
-
-Important nested fields include:
-
-```text
-variant.gene
-variant.hgvs_g
-variant.hgvs_c
-variant.hgvs_p
-variant.transcript
-variant.consequence
-disease.name
-disease.mondo_id
-disease.inheritance
-human_expert.classification
-human_expert.criteria[].criterion
-human_expert.criteria[].strength
-human_expert.criteria[].evidence_summary
-human_expert.criteria[].references[]
-human_expert.criteria_considered_not_met[]
-human_expert.overall_summary
-human_expert.curator_assessments[].comments[]
-```
 
 ## A practical agent architecture
 
@@ -149,59 +115,21 @@ Tool outputs change over time. Every adapter should preserve the queried identif
 | Literature discovery | [PubMed E-utilities](https://www.ncbi.nlm.nih.gov/books/NBK25501/) and [LitVar2](https://www.ncbi.nlm.nih.gov/research/litvar2/) | PMID, title, publication date, matched variant/gene, study type, and the exact claim supported |
 | Protein/domain context | [UniProt](https://www.uniprot.org/) | Protein accession/version, domain or active-site annotation, evidence provenance |
 
-Practical notes:
 
-- Prefer an official API or downloadable release to scraping an HTML page.
-- Cache raw responses during the project so a result can be reproduced and rate limits are respected.
-- Never put API keys in code, prompts, notebooks, screenshots, or Git history. Use environment variables.
-- Check each resource's current license, terms, release notes, and rate limits before building a public service.
-- Missing data are not evidence of absence. For example, a population database may lack adequate coverage at a locus.
 
-### How to use ClinVar without copying its answer
+### How to use ClinVar/ClinGen without copying its answer
 
 ClinVar is valuable, but its aggregate classification must not become the agent's only argument.
 
 1. Complete normalization, population, prediction, functional, and literature retrieval first.
 2. Freeze the independent evidence assessment.
-3. Query ClinVar as a cross-check.
+3. Query ClinVar/ClinGen as a cross-check.
 4. Record review status, condition, date, submitters, and conflicts—not just the displayed label.
 5. Follow linked submissions and primary publications when possible.
-6. If ClinVar disagrees with the agent, report the disagreement and identify which evidence would resolve it.
+6. If ClinVar/ClinGen disagrees with the agent, report the disagreement and identify which evidence would resolve it.
 
-Never translate “ClinVar says pathogenic” into PP5. PP5 and BP6 should not be used when the underlying evidence can be inspected.
+Never translate “ClinVar/ClinGen says pathogenic” into PP5. PP5 and BP6 should not be used when the underlying evidence can be inspected.
 
-## The evidence ledger
-
-Every agent tool call should produce a compact, visible evidence record. This is an audit trail, not a request to expose private model chain-of-thought.
-
-Minimum fields:
-
-```json
-{
-  "evidence_id": "E03",
-  "category": "population",
-  "source": "gnomAD",
-  "source_release": "<release>",
-  "retrieved_at": "<ISO-8601 timestamp>",
-  "query": {
-    "assembly": "GRCh38",
-    "variant": "<normalized genomic variant>",
-    "transcript": "<accession.version or null>"
-  },
-  "raw_fields": {
-    "allele_count": "<value>",
-    "allele_number": "<value>",
-    "allele_frequency": "<value>",
-    "filters": "<value>"
-  },
-  "source_url_or_accession": "<stable URL or accession>",
-  "interpretation": "<one-sentence statement limited to what the result supports>",
-  "candidate_acmg_code": "<for example PM2_Supporting, or null>",
-  "status": "supports|contradicts|uninformative|missing"
-}
-```
-
-Two different prediction scores that depend on overlapping training data are not automatically two independent ACMG criteria. Keep the raw scores, then deduplicate them into the single permitted computational evidence code and strength.
 
 ## Suggested agent output contract
 
@@ -303,33 +231,6 @@ Benign evidence strengths:
 | `BP6` | Legacy reputable-source assertion; ClinGen recommends not using it without inspecting the evidence |
 | `BP7` | Synonymous or noncoding variant with no predicted splice impact under the applicable specification |
 
-### Important modern guardrails
-
-- Use the applicable ClinGen gene–disease specification before generic thresholds.
-- Treat `PM2` as Supporting unless an applicable expert specification says otherwise.
-- Do not use `PP5` or `BP6` as a substitute for reviewing evidence.
-- Do not double-count correlated computational predictors.
-- Do not equate a prediction with a validated functional experiment.
-- Check inheritance and phase before using recessive criteria such as `PM3`.
-- Apply criteria at the strength supported by the evidence; do not silently upgrade them.
-- Preserve conflicting and missing evidence. VUS is an appropriate result when the evidence is insufficient or contradictory.
-
-### PAH-specific rules used in this project
-
-This project should use the [ClinGen Phenylketonuria VCEP PAH specification, Version 2.0](https://erepo.clinicalgenome.org/cspec/ui/svi/doc/135637578), not generic ACMG thresholds alone. The complete educational summary is in [`docs/pah_acmg_reference.md`](docs/pah_acmg_reference.md).
-
-Examples of important PAH-specific differences include:
-
-- `PVS1` has PAH-specific variant-location, splice, transcript, and strength rules.
-- `PS3` is limited to Moderate or Supporting under the specified assay conditions.
-- `PS4` is not applicable; use the PAH `PM3` proband/phase approach.
-- `PM2` is Supporting with the PAH-specified population threshold.
-- `PM1` is restricted to specified active-site, substrate-binding, and cofactor-binding residues.
-- `PP3` and `BP4` use calibrated REVEL/SpliceAI rules and must not be counted repeatedly.
-- `BA1` and `BS1` use PAH-specific allele-frequency thresholds.
-- `PP5` and `BP6` are not applicable.
-
-Always read the official current specification before implementing a threshold. A rule adapter should store the specification URL, version, release date, and the exact criterion text or structured threshold used.
 
 ## Evaluation rubric
 
@@ -355,8 +256,6 @@ Accuracy without traceable evidence should not receive full credit.
 
 ### Phase 2: expert-VUS challenge
 
-Do not score students by how many VUS they force into P/LP or B/LB. Score:
-
 - whether they find relevant evidence not present in the initial input;
 - whether each claim links to a source, version, and raw result;
 - whether literature claims match the actual experiment or cohort;
@@ -366,48 +265,6 @@ Do not score students by how many VUS they force into P/LP or B/LB. Score:
 
 Any proposed reclassification should be clearly marked **research/educational only** and supported by a reproducible evidence package.
 
-## Suggested five-day build plan
 
-| Day | Deliverable |
-|---|---|
-| 1 | Define input/output schemas; implement HGVS normalization and transcript checks |
-| 2 | Add VEP, gnomAD, and computational/splice annotations with cached raw responses |
-| 3 | Add ClinGen rules and ACMG evidence objects; implement deduplication and conflict checks |
-| 4 | Add PubMed/LitVar2 retrieval, ClinVar cross-check, and an interactive dialogue interface |
-| 5 | Freeze the agent, run both tests, calculate metrics, and present an evidence-traced case |
 
-## Repository layout
 
-```text
-README.md
-data/
-  expert_cases_50_STUDENT.jsonl
-  source_provenance.tsv
-docs/
-  pah_acmg_reference.md
-examples/
-  prepare_student_inputs.py
-```
-
-Generated `outputs/` files are intentionally ignored by Git.
-
-## Primary guidance and attribution
-
-- Richards et al. 2015: [ACMG/AMP standards and guidelines](https://pmc.ncbi.nlm.nih.gov/articles/PMC4544753/)
-- ClinGen: [Sequence Variant Interpretation guidance](https://clinicalgenome.org/working-groups/sequence-variant-interpretation/)
-- ClinGen: [PAH-specific Criteria Specification, Version 2.0](https://erepo.clinicalgenome.org/cspec/ui/svi/doc/135637578)
-- Dataset source: [ClinGen Evidence Repository](https://erepo.clinicalgenome.org/evrepo/)
-- ClinVar: [data use and attribution](https://www.ncbi.nlm.nih.gov/clinvar/docs/maintenance_use/)
-
-Please cite and attribute the original databases, expert panels, software, and publications used by an agent. ClinGen and NCBI records can change; retain accessions, versions, dates, and local query artifacts needed to reproduce a course result.
-
-No repository-wide reuse license has yet been selected by the repository owner. Do not assume that third-party databases, software, prediction files, or publications share the same license.
-
-## Safety and limitations
-
-- The dataset is small, restricted to one gene–disease system, and not representative of all variant types or clinical populations.
-- Expert interpretations have dates and can become outdated as population, functional, case, and specification evidence changes.
-- The 50 cases are curated examples, not independent patient observations.
-- Prediction models can be biased, miscalibrated, transcript-sensitive, or outside their intended domain.
-- An LLM-generated explanation can sound confident even when a tool failed. Require raw evidence fields and explicit error states.
-- Final clinical interpretation requires qualified professionals, validated pipelines, complete patient context, and laboratory procedures beyond this project.
