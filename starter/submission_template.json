@@ -1,0 +1,87 @@
+{
+  "team": "TEAM_NAME",
+  "case_id": "manuel",
+  "input": {
+    "vcf": "data/Pfeiffer.vcf",
+    "phenopacket": "data/pfeiffer-phenopacket.yml",
+    "assembly": "GRCh37",
+    "sample": "manuel",
+    "hpo_terms": [
+      "HP:0001159",
+      "HP:0000486",
+      "HP:0000327",
+      "HP:0000520",
+      "HP:0000316",
+      "HP:0000244"
+    ]
+  },
+  "method": {
+    "agent_name": "DNA Detective",
+    "agent_version": "0.1.0",
+    "tools": [],
+    "run_started_at": "YYYY-MM-DDTHH:MM:SSZ",
+    "run_finished_at": "YYYY-MM-DDTHH:MM:SSZ"
+  },
+  "top_candidates": [
+    {
+      "rank": 1,
+      "candidate_id": "CHROM-POS-REF-ALT",
+      "normalized_variant": {
+        "assembly": "GRCh37",
+        "chrom": "",
+        "pos": 0,
+        "ref": "",
+        "alt": "",
+        "hgvs_g": "",
+        "hgvs_c": "",
+        "hgvs_p": ""
+      },
+      "gene": "",
+      "transcript": "",
+      "consequence": "",
+      "zygosity": "",
+      "candidate_disease": "",
+      "inheritance": "",
+      "phenotype_match": {
+        "score": null,
+        "matched_hpo_terms": [],
+        "explanation": ""
+      },
+      "supporting_evidence_ids": [],
+      "conflicting_evidence_ids": [],
+      "missing_evidence": [],
+      "reason_for_rank": "",
+      "confidence": null
+    }
+  ],
+  "evidence_log": [
+    {
+      "evidence_id": "E01",
+      "candidate_id": "CHROM-POS-REF-ALT",
+      "category": "clinvar",
+      "source": "ClinVar",
+      "record_or_accession": "",
+      "query": "",
+      "assembly": "GRCh37",
+      "transcript": null,
+      "raw_field": "",
+      "raw_value": "",
+      "tool_or_data_version": "retrieved YYYY-MM-DD",
+      "url": "",
+      "retrieved_at": "YYYY-MM-DDTHH:MM:SSZ",
+      "interpretation": "",
+      "limitations": []
+    }
+  ],
+  "follow_up_examples": [
+    {
+      "user": "Why is candidate 1 more suspicious than candidate 2?",
+      "agent": ""
+    },
+    {
+      "user": "What evidence argues against your top candidate?",
+      "agent": ""
+    }
+  ],
+  "limitations": []
+}
