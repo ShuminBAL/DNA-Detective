@@ -17,28 +17,15 @@ Build an agent that answers:
 
 Your agent should not simply return one score. It should gather evidence from professional resources, compare candidates, keep a traceable evidence log, explain conflicts, and answer follow-up questions.
 
-## What to submit
+## Target
 
 Submit:
 
-- a ranked list of the **top 5–10 candidate variants**;
-- one detailed JSON report following [`docs/submission_format.md`](docs/submission_format.md);
-- an evidence table containing database accessions, URLs, versions or retrieval dates, and raw results;
+- a list of candidate pathogenic variants;
+- Evidence of why the agent selected those variants (e.g, ClinGen results, AlphaMissence predictions, etc)
 - a short demonstration showing that a user can ask follow-up questions; and
-- your source code and instructions for running the agent.
 
-For every shortlisted variant, explain:
 
-- the normalized variant and genome build;
-- gene, transcript, and molecular consequence;
-- zygosity and relevant inheritance model;
-- phenotype–gene/disease match;
-- population frequency;
-- ClinVar and ClinGen findings;
-- splice or missense predictions when relevant;
-- literature or functional evidence when available;
-- evidence against causality, conflicts, and remaining uncertainty; and
-- why it ranks above the other candidates.
 
 ## Data at a glance
 
@@ -141,8 +128,7 @@ The intelligence is in deciding **which candidate and which evidence source to i
 
 Start from [`starter/agent_brief.md`](starter/agent_brief.md) and [`starter/submission_template.json`](starter/submission_template.json). Your final report should be valid JSON and should cite the exact records used.
 
-## Tools students can use
-
+## Potential useful tools
 The complete guide is in [`docs/toolbox.md`](docs/toolbox.md), with a short ACMG/AMP guide in [`docs/acmg_evidence_guide.md`](docs/acmg_evidence_guide.md). A strong solution can combine the following:
 
 | Purpose | Recommended tools |
@@ -191,54 +177,6 @@ A minimum usable agent should:
 9. return a top-5–10 ranking with traceable evidence; and
 10. answer a follow-up question such as “Why is candidate 1 stronger than candidate 2?”
 
-## Suggested evaluation rubric
 
-| Area | Weight | What good work looks like |
-|---|---:|---|
-| Candidate ranking | 30% | The likely causal variant is highly ranked; alternatives are compared fairly |
-| Phenotype reasoning | 20% | HPO terms are used explicitly, not only the case filename |
-| Variant evidence | 20% | Consequence, frequency, clinical databases, predictors, and literature are integrated appropriately |
-| Traceability | 15% | Every important claim has an accession/URL, version or date, and raw value |
-| Agent behavior | 10% | The system chooses tools, replans, handles failures, and answers follow-ups |
-| Communication | 5% | The final explanation is concise, clear, and honest about uncertainty |
 
-Raw predictor scores without phenotype reasoning and source traceability should not receive full credit.
 
-## Repository map
-
-```text
-DNA-Detective/
-├── data/
-│   ├── Pfeiffer.vcf
-│   ├── pfeiffer-phenopacket.yml
-│   └── README.md
-├── docs/
-│   ├── acmg_evidence_guide.md
-│   ├── submission_format.md
-│   └── toolbox.md
-├── examples/
-│   ├── inspect_inputs.py
-│   └── vcf_to_tsv.py
-├── starter/
-│   ├── agent_brief.md
-│   └── submission_template.json
-└── README.md
-```
-
-## Reproducibility rules
-
-For every external result, save:
-
-- the input identifier and genome assembly;
-- tool/database name;
-- release, model version, or retrieval date;
-- raw field name and raw value;
-- transcript/accession version where relevant;
-- source URL or accession; and
-- a one-sentence interpretation written by the agent.
-
-Never invent a PMID, accession, score, or database result. If a service fails or a variant cannot be mapped, record the failure and continue with other evidence.
-
-## Source and license notes
-
-The two case files were copied from the `examples/` directory distributed with Exomiser CLI 15.1.0. See [`data/README.md`](data/README.md) for provenance and checksums. Each external tool or dataset has its own license and citation requirements; students are responsible for following them, especially for locally installed prediction models and downloaded score files.
